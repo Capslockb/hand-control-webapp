@@ -15,6 +15,139 @@
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            color: #fff;
+        }
+
+        /* ============ LANDING SCREEN ============ */
+        #landing {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at 30% 20%, #0a1628, #000000 70%);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+            will-change: opacity, transform;
+        }
+        #landing.hidden {
+            opacity: 0;
+            transform: scale(1.4);
+            pointer-events: none;
+        }
+
+        .landing-content {
+            text-align: center;
+            max-width: 520px;
+            padding: 40px 24px;
+        }
+
+        .landing-icon {
+            font-size: 64px;
+            margin-bottom: 12px;
+            display: block;
+            filter: drop-shadow(0 0 30px rgba(0, 170, 255, 0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+        }
+
+        .landing-title {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .landing-sub {
+            font-size: 15px;
+            opacity: 0.5;
+            margin-top: 8px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .gesture-preview {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin: 32px 0;
+            flex-wrap: wrap;
+        }
+        .gesture-preview .item {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 14px 16px;
+            min-width: 90px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .gesture-preview .item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .gesture-preview .icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .gesture-preview .label {
+            font-size: 12px;
+            opacity: 0.6;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-start {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 40px;
+            border: none;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            box-shadow: 0 4px 24px rgba(59, 130, 246, 0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 32px rgba(59, 130, 246, 0.5);
+        }
+        .btn-start:active {
+            transform: scale(0.97);
+        }
+        .btn-start:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .landing-footer {
+            margin-top: 28px;
+            font-size: 12px;
+            opacity: 0.25;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============ CAMERA CONTAINER ============ */
+        #app {
+            position: fixed;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.9s ease;
+            will-change: opacity;
+        }
+        #app.visible {
+            opacity: 1;
         }
 
         .container {
@@ -42,7 +175,65 @@
             z-index: 2;
         }
 
-        /* ---------- HUD ---------- */
+        /* ============ ONBOARDING OVERLAY ============ */
+        #onboarding {
+            position: absolute;
+            inset: 0;
+            z-index: 12;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            text-align: center;
+            padding: 24px;
+        }
+        #onboarding.show {
+            opacity: 1;
+        }
+        #onboarding h2 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        #onboarding p {
+            font-size: 15px;
+            opacity: 0.7;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+        #onboarding .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 380px;
+        }
+        #onboarding .cell {
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 13px;
+        }
+        #onboarding .cell .key {
+            display: inline-block;
+            background: rgba(255,255,255,0.12);
+            padding: 1px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        #onboarding .close-hint {
+            font-size: 12px;
+            opacity: 0.35;
+            margin-top: 12px;
+        }
+
+        /* ============ HUD ============ */
         #hud {
             position: absolute;
             top: 0; left: 0;
@@ -119,7 +310,7 @@
         .dot.red { background: #ef4444; }
         .dot.yellow { background: #eab308; }
 
-        /* ---------- Gesture toast ---------- */
+        /* ============ GESTURE TOAST ============ */
         #gesture-toast {
             position: absolute;
             top: 50%;
@@ -146,7 +337,7 @@
             margin-top: 4px;
         }
 
-        /* ---------- Controls (pointer-events: auto) ---------- */
+        /* ============ CONTROLS ============ */
         #fs-toggle {
             position: absolute;
             top: 16px;
@@ -169,9 +360,31 @@
         }
         #fs-toggle:hover { background: rgba(255,255,255,0.15); }
 
-        #connector-toggle {
+        #help-toggle {
             position: absolute;
             top: 64px;
+            right: 16px;
+            pointer-events: auto;
+            z-index: 20;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        #help-toggle:hover { background: rgba(255,255,255,0.15); }
+
+        #connector-toggle {
+            position: absolute;
+            top: 112px;
             right: 16px;
             pointer-events: auto;
             z-index: 20;
@@ -192,7 +405,7 @@
         #connector-toggle:hover { background: rgba(255,255,255,0.15); }
         #connector-toggle.connected { border-color: #22c55e; }
 
-        /* ---------- Cursor ---------- */
+        /* ============ CURSOR ============ */
         #cursor-dot {
             position: absolute;
             width: 16px;
@@ -217,11 +430,63 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+            #landing.hidden { transition: opacity 0.3s ease; transform: none; }
             #gesture-toast, #cursor-dot { transition: none; animation: none; }
+        }
+
+        @media (max-width: 600px) {
+            .landing-icon { font-size: 48px; }
+            .landing-title { font-size: 26px; }
+            .gesture-preview .item { min-width: 70px; padding: 10px 12px; }
+            .gesture-preview .icon { font-size: 22px; }
+            .btn-start { padding: 12px 28px; font-size: 16px; }
+            #onboarding .grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+
+<!-- ====== LANDING SCREEN ====== -->
+<div id="landing">
+    <div class="landing-content">
+        <span class="landing-icon">✋</span>
+        <h1 class="landing-title">Hand Control</h1>
+        <p class="landing-sub">Control your PC with gestures — no install, no hardware</p>
+
+        <div class="gesture-preview">
+            <div class="item">
+                <span class="icon">👆</span>
+                <span class="label">Move Cursor</span>
+            </div>
+            <div class="item">
+                <span class="icon">🤏</span>
+                <span class="label">Pinch = Click</span>
+            </div>
+            <div class="item">
+                <span class="icon">🖐️</span>
+                <span class="label">Open Palm = Engage</span>
+            </div>
+            <div class="item">
+                <span class="icon">✊</span>
+                <span class="label">Fist = Disengage</span>
+            </div>
+            <div class="item">
+                <span class="icon">👈👉</span>
+                <span class="label">Swipe = Navigate</span>
+            </div>
+        </div>
+
+        <button class="btn-start" id="btn-start">
+            Start Hands-Free
+            <span style="font-size:20px;">→</span>
+        </button>
+
+        <p class="landing-footer">Camera feed stays local — nothing leaves your device</p>
+    </div>
+</div>
+
+<!-- ====== APP ====== -->
+<div id="app">
 <div class="container">
     <video id="webcam" autoplay playsinline></video>
     <canvas id="overlay"></canvas>
@@ -231,11 +496,13 @@
 
     <!-- HUD -->
     <div id="hud">
-        <div id="status">Loading MediaPipe…</div>
+        <div id="status">Initializing…</div>
+
         <div id="hud-left">
             <div class="hud-badge"><span class="label">FPS</span> <span class="value" id="fps-val">0</span></div>
             <div class="hud-badge"><span class="label">GESTURE</span> <span class="value" id="gesture-val">—</span></div>
         </div>
+
         <div id="hud-right">
             <div class="hud-badge">
                 <span class="dot" id="bridge-dot"></span>
@@ -250,12 +517,29 @@
         </div>
     </div>
 
+    <!-- Onboarding overlay (fades after first use) -->
+    <div id="onboarding">
+        <h2>✋ You're in control</h2>
+        <p>Show your open palm to engage, then move your index finger to control the cursor.</p>
+        <div class="grid">
+            <div class="cell"><span class="key">🤏 Pinch</span> Click</div>
+            <div class="cell"><span class="key">🤌 Thumb+Middle</span> Right-click</div>
+            <div class="cell"><span class="key">🖐️ Open Palm</span> Toggle control</div>
+            <div class="cell"><span class="key">✊ Fist</span> Disengage</div>
+            <div class="cell"><span class="key">👈👉 Swipe</span> Back / Forward</div>
+            <div class="cell"><span class="key">F</span> Fullscreen toggle</div>
+        </div>
+        <p class="close-hint">This will fade in 6 seconds — tap anywhere to dismiss</p>
+    </div>
+
     <!-- Gesture toast -->
     <div id="gesture-toast"></div>
 
     <!-- Controls -->
-    <button id="fs-toggle" title="Toggle Fullscreen">⛶</button>
+    <button id="fs-toggle" title="Toggle Fullscreen (F)">⛶</button>
+    <button id="help-toggle" title="Show Help">?</button>
     <button id="connector-toggle" title="Reconnect Bridge">⟳</button>
+</div>
 </div>
 
 <!-- MediaPipe CDN -->
@@ -268,40 +552,40 @@
     'use strict';
 
     // ---- DOM refs ----
-    const video     = document.getElementById('webcam');
-    const overlay   = document.getElementById('overlay');
-    const ctx       = overlay.getContext('2d');
-    const statusEl  = document.getElementById('status');
-    const fpsVal    = document.getElementById('fps-val');
-    const gestureVal= document.getElementById('gesture-val');
-    const bridgeDot = document.getElementById('bridge-dot');
-    const bridgeVal = document.getElementById('bridge-val');
-    const trackDot  = document.getElementById('tracking-dot');
-    const trackVal  = document.getElementById('tracking-val');
-    const toast     = document.getElementById('gesture-toast');
-    const cursorDot = document.getElementById('cursor-dot');
-    const fsBtn     = document.getElementById('fs-toggle');
-    const connBtn   = document.getElementById('connector-toggle');
+    const landing     = document.getElementById('landing');
+    const app         = document.getElementById('app');
+    const startBtn    = document.getElementById('btn-start');
+    const video       = document.getElementById('webcam');
+    const overlay     = document.getElementById('overlay');
+    const ctx         = overlay.getContext('2d');
+    const statusEl    = document.getElementById('status');
+    const fpsVal      = document.getElementById('fps-val');
+    const gestureVal  = document.getElementById('gesture-val');
+    const bridgeDot   = document.getElementById('bridge-dot');
+    const bridgeVal   = document.getElementById('bridge-val');
+    const trackDot    = document.getElementById('tracking-dot');
+    const trackVal    = document.getElementById('tracking-val');
+    const toast       = document.getElementById('gesture-toast');
+    const cursorDot   = document.getElementById('cursor-dot');
+    const fsBtn       = document.getElementById('fs-toggle');
+    const helpBtn     = document.getElementById('help-toggle');
+    const connBtn     = document.getElementById('connector-toggle');
+    const onboarding  = document.getElementById('onboarding');
 
     // ---- State ----
     let ws               = null;
     let wsReconnectTimer = null;
     let lastSend         = 0;
-    const SEND_INTERVAL  = 30;   // ms between bridge sends
+    const SEND_INTERVAL  = 30;
     const WS_PORT        = 8124;
 
-    // Smooth cursor
     let smoothX = 0.5, smoothY = 0.5;
     let cursorVisible = false;
-
-    // Gesture state
     let currentGesture = '—';
     let gestureToastTimer = null;
-
-    // FPS tracking
     let frameCount = 0;
-    let fpsTime    = performance.now();
-    let fps        = 0;
+    let fpsTime = performance.now();
+    let fps = 0;
 
     // ---- Helpers ----
     function showToast(text, sub) {
@@ -311,68 +595,23 @@
         gestureToastTimer = setTimeout(() => toast.classList.remove('show'), 800);
     }
 
-    function setBridgeStatus(connected) {
-        bridgeDot.className = `dot ${connected ? 'green' : 'red'}`;
-        bridgeVal.textContent = connected ? 'Connected' : 'Disconnected';
-        connBtn.classList.toggle('connected', connected);
+    function setBridgeStatus(c) {
+        bridgeDot.className = `dot ${c ? 'green' : 'red'}`;
+        bridgeVal.textContent = c ? 'Connected' : 'Disconnected';
+        connBtn.classList.toggle('connected', c);
     }
 
-    function setTrackingStatus(active) {
-        trackDot.className = `dot ${active ? 'green' : 'yellow'}`;
-        trackVal.textContent = active ? 'Active' : 'Waiting…';
+    function setTrackingStatus(a) {
+        trackDot.className = `dot ${a ? 'green' : 'yellow'}`;
+        trackVal.textContent = a ? 'Active' : 'Waiting…';
     }
 
-    function smoothCursor(targetX, targetY) {
-        const factor = 0.35;
-        smoothX += (targetX - smoothX) * factor;
-        smoothY += (targetY - smoothY) * factor;
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        cursorDot.style.left = (smoothX * w) + 'px';
-        cursorDot.style.top  = (smoothY * h) + 'px';
+    function smoothCursor(tx, ty) {
+        smoothX += (tx - smoothX) * 0.35;
+        smoothY += (ty - smoothY) * 0.35;
+        cursorDot.style.left = (smoothX * window.innerWidth) + 'px';
+        cursorDot.style.top  = (smoothY * window.innerHeight) + 'px';
     }
-
-    // ---- WebSocket bridge ----
-    function connectWS() {
-        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
-        try {
-            ws = new WebSocket(`ws://127.0.0.1:${WS_PORT}`);
-        } catch (e) {
-            setBridgeStatus(false);
-            scheduleReconnect();
-            return;
-        }
-        ws.onopen = () => {
-            setBridgeStatus(true);
-            clearTimeout(wsReconnectTimer);
-            showToast('Bridge Connected', 'Ctrl+Click = right click');
-        };
-        ws.onclose = () => {
-            setBridgeStatus(false);
-            scheduleReconnect();
-        };
-        ws.onerror = () => { ws.close(); };
-    }
-
-    function scheduleReconnect() {
-        clearTimeout(wsReconnectTimer);
-        wsReconnectTimer = setTimeout(connectWS, 3000);
-    }
-
-    function sendToBridge(type, data) {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const now = performance.now();
-        if (now - lastSend < SEND_INTERVAL) return;
-        lastSend = now;
-        try {
-            ws.send(JSON.stringify({ type, ...data }));
-        } catch (_) {}
-    }
-
-    connBtn.addEventListener('click', () => {
-        if (ws) { try { ws.close(); } catch (_) {} }
-        connectWS();
-    });
 
     // ---- Fullscreen ----
     function toggleFS() {
@@ -387,128 +626,136 @@
         if (e.key === 'f' || e.key === 'F') toggleFS();
     });
 
-    // ---- Gesture Detection ----
-    function calcDistance(a, b) {
-        return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z || 0);
+    // ---- Onboarding ----
+    function showOnboarding() {
+        onboarding.classList.add('show');
+        setTimeout(() => {
+            onboarding.classList.remove('show');
+        }, 6000);
+    }
+    onboarding.addEventListener('click', () => onboarding.classList.remove('show'));
+    helpBtn.addEventListener('click', showOnboarding);
+
+    // ---- WebSocket Bridge ----
+    function connectWS() {
+        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+        try {
+            ws = new WebSocket(`ws://127.0.0.1:${WS_PORT}`);
+        } catch (_) {
+            setBridgeStatus(false);
+            scheduleReconnect();
+            return;
+        }
+        ws.onopen = () => {
+            setBridgeStatus(true);
+            clearTimeout(wsReconnectTimer);
+            showToast('Bridge Connected');
+        };
+        ws.onclose = () => { setBridgeStatus(false); scheduleReconnect(); };
+        ws.onerror = () => { ws.close(); };
     }
 
-    function isOpenPalm(landmarks) {
-        // All fingertips far from palm center = open hand
-        const wrist  = landmarks[0];
-        const tips   = [4, 8, 12, 16, 20];
-        const far    = tips.filter(i => calcDistance(wrist, landmarks[i]) > 0.12);
-        return far.length >= 4;
+    function scheduleReconnect() {
+        clearTimeout(wsReconnectTimer);
+        wsReconnectTimer = setTimeout(connectWS, 3000);
     }
 
-    function isPinch(thumb, index) {
-        return calcDistance(thumb, index) < 0.06;
-    }
-
-    function isFist(landmarks) {
-        const tips = [8, 12, 16, 20]; // index, middle, ring, pinky
-        const palm = landmarks[9];     // middle finger MCP
-        const allBent = tips.every(i => calcDistance(palm, landmarks[i]) < 0.12);
-        // Also check thumb is tucked
-        const thumbBent = calcDistance(palm, landmarks[4]) < 0.12;
-        return allBent && thumbBent;
-    }
-
-    let prevCenterX = null;
-    let swipeCooldown = 0;
-
-    function detectSwipe(landmarks) {
-        const wrist = landmarks[0];
-        const cx = wrist.x;
-        if (prevCenterX === null) { prevCenterX = cx; return null; }
-        const dx = cx - prevCenterX;
-        prevCenterX = cx;
+    function sendToBridge(type, data) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
         const now = performance.now();
-        if (now < swipeCooldown) return null;
+        if (now - lastSend < SEND_INTERVAL) return;
+        lastSend = now;
+        try { ws.send(JSON.stringify({ type, ...data })); } catch (_) {}
+    }
+
+    connBtn.addEventListener('click', () => {
+        if (ws) { try { ws.close(); } catch (_) {} }
+        connectWS();
+    });
+
+    // ---- Gesture detection ----
+    function dist(a, b) { return Math.hypot(a.x-b.x, a.y-b.y, a.z||0 - b.z||0); }
+
+    function isOpenPalm(lm) {
+        const tips = [4,8,12,16,20];
+        return tips.filter(i => dist(lm[0], lm[i]) > 0.12).length >= 4;
+    }
+
+    function isPinch(t, i) { return dist(t, i) < 0.06; }
+
+    function isFist(lm) {
+        const tips = [8,12,16,20];
+        const palm = lm[9];
+        const bent = tips.every(i => dist(palm, lm[i]) < 0.12);
+        return bent && dist(palm, lm[4]) < 0.12;
+    }
+
+    let prevCx = null;
+    let swipeCd = 0;
+
+    function detectSwipe(lm) {
+        const cx = lm[0].x;
+        if (prevCx === null) { prevCx = cx; return null; }
+        const dx = cx - prevCx;
+        prevCx = cx;
+        const now = performance.now();
+        if (now < swipeCd) return null;
         if (Math.abs(dx) > 0.015) {
-            swipeCooldown = now + 400;
+            swipeCd = now + 400;
             return dx > 0 ? 'swipe_right' : 'swipe_left';
         }
         return null;
     }
 
-    let lastClickTime = 0;
-    const CLICK_COOLDOWN = 400;
+    let lastClick = 0;
+    const CLICK_CD = 400;
 
-    function detectClick(landmarks) {
-        const thumb = landmarks[4];
-        const index = landmarks[8];
-        const middle = landmarks[12];
-
-        // Right-click: thumb + middle pinch
-        if (calcDistance(thumb, middle) < 0.05) {
-            const now = performance.now();
-            if (now - lastClickTime > CLICK_COOLDOWN * 2) {
-                lastClickTime = now;
-                return 'right';
-            }
+    function detectClick(lm) {
+        const thumb = lm[4], index = lm[8], middle = lm[12];
+        const now = performance.now();
+        if (dist(thumb, middle) < 0.05 && now - lastClick > CLICK_CD*2) {
+            lastClick = now;
+            return 'right';
         }
-        // Left-click: thumb + index pinch
-        if (isPinch(thumb, index)) {
-            const now = performance.now();
-            if (now - lastClickTime > CLICK_COOLDOWN) {
-                lastClickTime = now;
-                return 'left';
-            }
+        if (isPinch(thumb, index) && now - lastClick > CLICK_CD) {
+            lastClick = now;
+            return 'left';
         }
         return null;
     }
 
     // ---- Drawing ----
-    function drawHand(landmarks, isLeft) {
-        const w = overlay.width;
-        const h = overlay.height;
+    function drawHand(lm, isLeft) {
+        const w = overlay.width, h = overlay.height;
         const color = isLeft ? '#22c55e' : '#00ccff';
-
-        // Connections
         ctx.strokeStyle = color;
-        ctx.lineWidth = Math.max(2, Math.min(4, Math.min(w, h) / 300));
-        const connections = [
-            [0,1],[1,2],[2,3],[3,4],
-            [0,5],[5,6],[6,7],[7,8],
-            [0,9],[9,10],[10,11],[11,12],
-            [0,13],[13,14],[14,15],[15,16],
-            [0,17],[17,18],[18,19],[19,20],
-            [0,5],[5,9],[9,13],[13,17]
-        ];
-        connections.forEach(([i, j]) => {
+        ctx.lineWidth = Math.max(2, Math.min(4, Math.min(w,h)/300));
+        const conn = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+                      [0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],
+                      [0,17],[17,18],[18,19],[19,20],[0,5],[5,9],[9,13],[13,17]];
+        conn.forEach(([i,j]) => {
             ctx.beginPath();
-            ctx.moveTo(landmarks[i].x * w, landmarks[i].y * h);
-            ctx.lineTo(landmarks[j].x * w, landmarks[j].y * h);
+            ctx.moveTo(lm[i].x*w, lm[i].y*h);
+            ctx.lineTo(lm[j].x*w, lm[j].y*h);
             ctx.stroke();
         });
-
-        // Landmark dots
-        const r = Math.max(3, Math.min(7, Math.min(w, h) / 250));
-        landmarks.forEach((lm, idx) => {
-            ctx.fillStyle = (idx === 4 || idx === 8) ? '#ff4444' : color;
+        const r = Math.max(3, Math.min(7, Math.min(w,h)/250));
+        lm.forEach((p, idx) => {
+            ctx.fillStyle = (idx===4||idx===8) ? '#ff4444' : color;
             ctx.beginPath();
-            ctx.arc(lm.x * w, lm.y * h, r, 0, Math.PI * 2);
+            ctx.arc(p.x*w, p.y*h, r, 0, Math.PI*2);
             ctx.fill();
         });
     }
 
-    // ---- Cursor from index finger ----
-    function getCursorPos(landmarks) {
-        const index = landmarks[8];
-        return { x: index.x, y: index.y };
-    }
-
-    // ---- Main processing ----
+    // ---- Main ----
     function onResults(results) {
         ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-        // Sync canvas size
         if (overlay.width !== window.innerWidth || overlay.height !== window.innerHeight) {
             overlay.width = window.innerWidth;
             overlay.height = window.innerHeight;
         }
 
-        // FPS
         frameCount++;
         const now = performance.now();
         if (now - fpsTime >= 1000) {
@@ -522,98 +769,85 @@
             statusEl.textContent = 'No hands detected';
             setTrackingStatus(false);
             cursorDot.classList.remove('active');
-            currentGesture = '—';
             gestureVal.textContent = '—';
-            prevCenterX = null;
+            prevCx = null;
             return;
         }
 
         setTrackingStatus(true);
-        const handCount = results.multiHandLandmarks.length;
-        statusEl.textContent = handCount === 1 ? '1 hand' : `${handCount} hands`;
+        const n = results.multiHandLandmarks.length;
+        statusEl.textContent = n === 1 ? '1 hand' : `${n} hands`;
 
-        // Track which hand is which
-        let rightLandmarks = null;
-        let leftLandmarks  = null;
-        let rightIndex     = -1;
-        let leftIndex      = -1;
-
-        for (let i = 0; i < handCount; i++) {
+        let rightLM = null, leftLM = null;
+        for (let i = 0; i < n; i++) {
             const lm = results.multiHandLandmarks[i];
-            const handedness = results.multiHandedness[i].label;
-            drawHand(lm, handedness === 'Left');
-            if (handedness === 'Right') { rightLandmarks = lm; rightIndex = i; }
-            else { leftLandmarks = lm; leftIndex = i; }
+            const isL = results.multiHandedness[i].label === 'Left';
+            drawHand(lm, isL);
+            if (!isL) rightLM = lm;
+            else leftLM = lm;
         }
 
-        // Use the RIGHT hand for cursor control (mirrored — index finger)
-        const controlHand = rightLandmarks || leftLandmarks;
-        if (controlHand) {
-            const pos = getCursorPos(controlHand);
+        const hand = rightLM || leftLM;
+        if (hand) {
+            const pos = { x: hand[8].x, y: hand[8].y };
             smoothCursor(pos.x, pos.y);
             cursorDot.classList.add('active');
 
-            // Detect gestures
-            const clickType = detectClick(controlHand);
-
-            // Send to bridge continuously
             sendToBridge('cursor', { x: smoothX, y: smoothY });
 
-            if (clickType === 'left') {
+            const click = detectClick(hand);
+            if (click === 'left') {
                 showToast('🖱️ Click', 'Left');
                 sendToBridge('click', { button: 'left' });
                 cursorDot.classList.add('clicking');
                 setTimeout(() => cursorDot.classList.remove('clicking'), 200);
                 currentGesture = 'Click';
-            } else if (clickType === 'right') {
-                showToast('🖱️ Right Click', 'Secondary');
+            } else if (click === 'right') {
+                showToast('🖱️ Right Click');
                 sendToBridge('click', { button: 'right' });
                 currentGesture = 'Right Click';
-            } else if (isOpenPalm(controlHand)) {
+            } else if (isOpenPalm(hand)) {
                 currentGesture = 'Open Palm ⚡';
                 sendToBridge('open_palm', {});
-            } else if (isFist(controlHand)) {
+            } else if (isFist(hand)) {
                 currentGesture = 'Fist ✊';
                 sendToBridge('fist', {});
             } else {
-                const swipe = detectSwipe(controlHand);
-                if (swipe) {
-                    currentGesture = swipe === 'swipe_left' ? 'Swipe ←' : 'Swipe →';
+                const sw = detectSwipe(hand);
+                if (sw) {
+                    const dir = sw === 'swipe_left' ? 'left' : 'right';
+                    currentGesture = sw === 'swipe_left' ? 'Swipe ←' : 'Swipe →';
                     showToast(currentGesture);
-                    sendToBridge('swipe', { direction: swipe === 'swipe_left' ? 'left' : 'right' });
+                    sendToBridge('swipe', { direction: dir });
                 } else {
                     currentGesture = 'Tracking';
                 }
             }
-
-            // Drag: pinch + hold (thumb+index held for 200ms+)
-            // Handled by the click state machine above
         }
-
         gestureVal.textContent = currentGesture;
-
-        // Update cursor dot position text
-        if (controlHand && handCount > 0) {
-            // Also send hand state periodically
-        }
     }
 
-    // ---- Init ----
-    async function init() {
+    // ---- Start ----
+    async function startApp() {
+        startBtn.disabled = true;
+        startBtn.textContent = 'Starting…';
+
         statusEl.textContent = 'Requesting camera…';
+
         let stream;
         try {
             stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }
             });
         } catch (e) {
-            statusEl.textContent = 'Camera access denied';
-            showToast('🔒 Camera Required', 'Allow camera access and reload');
+            startBtn.disabled = false;
+            startBtn.textContent = 'Camera Access Needed';
+            showToast('🔒 Camera required', 'Allow camera access and reload');
             return;
         }
+
         video.srcObject = stream;
         await new Promise(r => { video.onloadedmetadata = r; });
-
         overlay.width = window.innerWidth;
         overlay.height = window.innerHeight;
 
@@ -631,7 +865,7 @@
         hands.onResults(onResults);
 
         await hands.initialize();
-        statusEl.textContent = 'Tracking ready — show your hand';
+        statusEl.textContent = 'Ready — show your hand';
 
         const camera = new Camera(video, {
             onFrame: async () => { await hands.send({ image: video }); },
@@ -639,28 +873,30 @@
         });
         camera.start();
 
+        // Transition: hide landing → show app
+        landing.classList.add('hidden');
+        app.classList.add('visible');
+
         connectWS();
 
-        // Resize handler
+        // Show onboarding after transition completes
+        setTimeout(showOnboarding, 1000);
+
         window.addEventListener('resize', () => {
             overlay.width = window.innerWidth;
             overlay.height = window.innerHeight;
         });
     }
 
-    // Detect when browser enters/leaves fullscreen
+    startBtn.addEventListener('click', startApp);
+
     document.addEventListener('fullscreenchange', () => {
-        fsBtn.textContent = document.fullscreenElement ? '⛶' : '⛶';
         if (!document.fullscreenElement) {
             showToast('⛶ Exited Fullscreen', 'Press F to re-enter');
         }
     });
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    connectWS();
 })();
 </script>
 </body>
