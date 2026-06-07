@@ -1,537 +1,559 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Hand Control WebApp</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Tony Stark Hand Control — fullscreen gesture control</title>
+  <meta name="theme-color" content="#0b0d10">
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --bg-2: #11151a;
+      --fg: #e6e8eb;
+      --muted: #8b95a3;
+      --accent: #ff5a1f;
+      --accent-2: #ffb000;
+      --green: #2ecc71;
+      --border: #1f262e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh; overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-        body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background: #000;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            color: #fff;
-        }
+    /* ---------- Grain overlay ---------- */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: url("assets/grain.png");
+      background-repeat: repeat;
+      background-size: 120px 120px;
+      opacity: 0.18;
+    }
 
-        /* ============ CONTAINER (handles whole lifecycle) ============ */
-        #app {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-        }
+    /* ============ LANDING ============ */
+    #landing {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(800px 400px at 20% 0%, rgba(255,90,31,0.10), transparent 60%),
+        radial-gradient(600px 300px at 100% 30%, rgba(255,176,0,0.07), transparent 60%);
+      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+      will-change: opacity, transform;
+    }
+    #landing.hidden {
+      opacity: 0;
+      transform: scale(1.3);
+      pointer-events: none;
+    }
 
-        .video-layer {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-        }
-        .video-layer video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-            display: block;
-        }
-        #overlay {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            transform: scaleX(-1);
-            pointer-events: none;
-        }
+    .landing-inner {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      max-width: 780px;
+      margin: 0 auto;
+      width: 100%;
+    }
 
-        /* ============ LANDING (original design + live preview) ============ */
-        #landing {
-            position: absolute;
-            inset: 0;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(ellipse at 30% 20%, #0a1628, #000000 70%);
-            transition: opacity 1s ease, transform 1s cubic-bezier(0.65, 0, 0.35, 1);
-            will-change: opacity, transform;
-            padding: 20px;
-        }
-        #landing.hidden {
-            opacity: 0;
-            transform: scale(1.3);
-            pointer-events: none;
-        }
+    /* ---------- Brand bar ---------- */
+    .brand-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      font-size: 14px;
+    }
+    .brand-bar .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      font-size: 15px;
+    }
+    .brand-mark { width: 28px; height: 28px; }
 
-        .landing-content {
-            text-align: center;
-            max-width: 560px;
-            width: 100%;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
+    /* ---------- Eyebrow + Title ---------- */
+    .eyebrow {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -1.2px;
+      font-weight: 800;
+      margin: 0 0 8px;
+    }
+    h1 .glow {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lede {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 620px;
+      margin: 0 auto 22px;
+    }
 
-        .landing-icon {
-            font-size: 64px;
-            margin-bottom: 10px;
-            display: block;
-            filter: drop-shadow(0 0 30px rgba(0, 170, 255, 0.3));
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-8px); }
-        }
+    /* ---------- Live preview window ---------- */
+    .preview-wrap {
+      position: relative;
+      width: 480px;
+      max-width: 85vw;
+      aspect-ratio: 16 / 10;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 48px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+      transition:
+        width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+        max-width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+        border-radius 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+        margin 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+      will-change: width, border-radius, margin;
+    }
+    .preview-wrap.zoomed {
+      width: 100vw;
+      max-width: 100vw;
+      border-radius: 0;
+      box-shadow: none;
+      margin: 0;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 5;
+      border-color: transparent;
+    }
+    .preview-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+    .preview-dot {
+      position: absolute;
+      top: 10px; left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: rgba(11,13,16,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 11px;
+      color: var(--muted);
+      z-index: 2;
+      transition: opacity 0.4s;
+    }
+    .preview-dot.hidden { opacity: 0; }
+    .pulse-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        .landing-title {
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .landing-sub {
-            font-size: 15px;
-            opacity: 0.5;
-            margin-top: 6px;
-            font-weight: 400;
-            letter-spacing: 0.3px;
-        }
+    /* ---------- CTA ---------- */
+    .cta-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.4s ease, transform 0.3s ease;
+    }
+    .cta-row.fade {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform: scale(1.02); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent);
+      color: #0b0d10;
+      border-color: var(--accent);
+      box-shadow: 0 4px 20px rgba(255,90,31,0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 28px rgba(255,90,31,0.45); }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+    }
+    .btn-ghost:hover { background: var(--bg-2); }
 
-        /* -------- Preview window integrated -------- */
-        .preview-wrap {
-            position: relative;
-            width: 460px;
-            max-width: 90vw;
-            aspect-ratio: 16 / 10;
-            margin: 22px auto 0;
-            border-radius: 20px;
-            overflow: hidden;
-            background: #111;
-            box-shadow:
-                0 8px 60px rgba(0,0,0,0.6),
-                0 0 0 1px rgba(255,255,255,0.06);
-            transition:
-                width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
-                max-width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
-                border-radius 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
-                margin 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
-            will-change: width, border-radius, margin;
-            z-index: 2;
-        }
-        .preview-wrap.zoomed {
-            width: 100vw;
-            max-width: 100vw;
-            border-radius: 0;
-            box-shadow: none;
-            margin: 0;
-            position: fixed;
-            top: 0; left: 0;
-            z-index: 5;
-        }
-        .preview-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-            display: block;
-        }
-        .preview-pulse {
-            position: absolute;
-            inset: 0;
-            border-radius: 20px;
-            pointer-events: none;
-            border: 2px solid rgba(59,130,246,0.3);
-            animation: pulse-ring 2.5s ease-in-out infinite;
-            transition: opacity 0.5s;
-        }
-        .preview-pulse.fade { opacity: 0; }
-        @keyframes pulse-ring {
-            0%, 100% { border-color: rgba(59,130,246,0.15); }
-            50%      { border-color: rgba(59,130,246,0.5); }
-        }
-        .preview-label {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 11px;
-            opacity: 0.45;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 14px;
-            border-radius: 20px;
-            pointer-events: none;
-            transition: opacity 0.4s;
-            white-space: nowrap;
-        }
-        .preview-label.hidden { opacity: 0; }
+    .features-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 14px;
+      transition: opacity 0.4s ease;
+    }
+    .features-row.fade { opacity: 0; pointer-events: none; }
+    .feature-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--bg-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .footer-note {
+      position: absolute;
+      bottom: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0.4;
+      transition: opacity 0.4s;
+    }
+    .footer-note.fade { opacity: 0; }
 
-        /* -------- Gesture cards (original style) -------- */
-        .gesture-preview {
-            display: flex;
-            gap: 14px;
-            justify-content: center;
-            margin: 22px 0 0;
-            flex-wrap: wrap;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-        .gesture-preview .card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            padding: 12px 14px;
-            min-width: 80px;
-            text-align: center;
-            transition: background 0.2s;
-        }
-        .gesture-preview .card:hover { background: rgba(255,255,255,0.08); }
-        .gesture-preview .card .icon {
-            font-size: 26px;
-            display: block;
-            margin-bottom: 5px;
-        }
-        .gesture-preview .card .label {
-            font-size: 12px;
-            opacity: 0.6;
-            letter-spacing: 0.3px;
-        }
-        .gesture-preview.fade {
-            opacity: 0;
-            transform: translateY(12px);
-        }
+    /* ============ FULLSCREEN APP ============ */
+    #app {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+    #app.visible { opacity: 1; pointer-events: auto; }
 
-        /* -------- Button (original style) -------- */
-        .btn-start {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 22px;
-            padding: 14px 40px;
-            border: none;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            pointer-events: auto;
-            color: #fff;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            box-shadow: 0 4px 24px rgba(59, 130, 246, 0.35);
-            transition: transform 0.2s, box-shadow 0.2s, opacity 0.5s;
-            position: relative;
-            z-index: 3;
-        }
-        .btn-start:hover {
-            transform: scale(1.03);
-            box-shadow: 0 6px 32px rgba(59, 130, 246, 0.5);
-        }
-        .btn-start:active { transform: scale(0.97); }
-        .btn-start:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .btn-start.fade {
-            opacity: 0;
-            transform: scale(0.8);
-            pointer-events: none;
-        }
+    .video-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    .video-layer video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      transform: scaleX(-1);
+      pointer-events: none;
+    }
 
-        .landing-footer {
-            margin-top: 22px;
-            font-size: 12px;
-            opacity: 0.25;
-            letter-spacing: 0.5px;
-            transition: opacity 0.4s;
-        }
-        .landing-footer.fade { opacity: 0; }
+    /* ---------- HUD ---------- */
+    .hud-elements {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      pointer-events: none;
+    }
+    .hud-elements > * { position: absolute; }
 
-        /* ============ HUD OVERLAYS ============ */
-        .hud-elements {
-            position: absolute;
-            inset: 0;
-            z-index: 12;
-            pointer-events: none;
-        }
-        .hud-elements > * { position: absolute; }
+    #hud-status {
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--fg);
+      background: rgba(11,13,16,0.7);
+      backdrop-filter: blur(8px);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transition: opacity 0.5s ease 0.6s;
+      white-space: nowrap;
+    }
+    #hud-status.show { opacity: 1; }
 
-        #hud-status {
-            top: 18px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            border: 1px solid rgba(255,255,255,0.06);
-            opacity: 0;
-            transition: opacity 0.5s ease 0.6s;
-            white-space: nowrap;
-        }
-        #hud-status.show { opacity: 1; }
+    #hud-right {
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      opacity: 0;
+      transition: opacity 0.5s ease 0.7s;
+    }
+    #hud-right.show { opacity: 1; }
+    .hud-badge {
+      background: rgba(11,13,16,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 5px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--fg);
+    }
+    .hud-badge .label { opacity: 0.5; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .hud-badge .value { font-weight: 600; }
 
-        #hud-right {
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            opacity: 0;
-            transition: opacity 0.5s ease 0.7s;
-        }
-        #hud-right.show { opacity: 1; }
-        .hud-badge {
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 5px 12px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #fff;
-        }
-        .hud-badge .label { opacity: 0.5; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-        .hud-badge .value { font-weight: 600; }
-        .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-        .dot.green { background: #22c55e; }
-        .dot.red { background: #ef4444; }
-        .dot.yellow { background: #eab308; }
+    /* ---------- Onboarding ---------- */
+    #onboarding {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11,13,16,0.7);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+      text-align: center;
+      padding: 24px;
+    }
+    #onboarding.show { opacity: 1; pointer-events: auto; }
+    #onboarding h2 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    #onboarding p { font-size: 14px; color: var(--muted); max-width: 380px; line-height: 1.5; }
+    #onboarding .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 18px 0;
+      max-width: 360px;
+    }
+    #onboarding .cell {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+    #onboarding .cell .g { font-size: 16px; }
+    #onboarding .close-hint { font-size: 11px; color: var(--muted); opacity: 0.4; margin-top: 10px; }
 
-        /* ============ ONBOARDING ============ */
-        #onboarding {
-            position: absolute;
-            inset: 0;
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(6px);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-            text-align: center;
-            padding: 24px;
-        }
-        #onboarding.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #onboarding h2 { font-size: 26px; font-weight: 600; margin-bottom: 6px; }
-        #onboarding p { font-size: 14px; opacity: 0.7; max-width: 380px; line-height: 1.5; }
-        #onboarding .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 18px 0;
-            max-width: 360px;
-        }
-        #onboarding .cell {
-            background: rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-        }
-        #onboarding .cell .g { font-size: 18px; }
-        #onboarding .close-hint { font-size: 12px; opacity: 0.3; margin-top: 10px; }
+    /* ---------- Toast ---------- */
+    #gesture-toast {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      color: var(--fg);
+      font-size: 28px;
+      font-weight: 700;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+      opacity: 0;
+      transition: opacity 0.15s, transform 0.2s;
+      pointer-events: none;
+      z-index: 18;
+      text-align: center;
+    }
+    #gesture-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    #gesture-toast .sub { font-size: 16px; font-weight: 400; opacity: 0.7; margin-top: 4px; }
 
-        /* ============ GESTURE TOAST ============ */
-        #gesture-toast {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            color: #fff;
-            font-size: 28px;
-            font-weight: 700;
-            text-shadow: 0 2px 20px rgba(0,0,0,0.6);
-            opacity: 0;
-            transition: opacity 0.15s, transform 0.2s;
-            pointer-events: none;
-            z-index: 18;
-            text-align: center;
-        }
-        #gesture-toast.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        #gesture-toast .sub { font-size: 16px; font-weight: 400; opacity: 0.7; margin-top: 4px; }
+    /* ---------- Controls ---------- */
+    .ctrl-btn {
+      position: absolute;
+      right: 16px;
+      pointer-events: auto;
+      z-index: 25;
+      background: rgba(11,13,16,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--fg);
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, opacity 0.5s;
+      opacity: 0;
+    }
+    .ctrl-btn.show { opacity: 1; }
+    .ctrl-btn:hover { background: var(--bg-2); }
+    .ctrl-btn.connected { border-color: var(--green); }
+    #fs-toggle        { top: 16px; }
+    #help-toggle      { top: 64px; }
+    #connector-toggle { top: 112px; }
 
-        /* ============ CTRL BUTTONS ============ */
-        .ctrl-btn {
-            position: absolute;
-            right: 16px;
-            pointer-events: auto;
-            z-index: 25;
-            background: rgba(0,0,0,0.45);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, opacity 0.5s;
-            opacity: 0;
-        }
-        .ctrl-btn.show { opacity: 1; }
-        .ctrl-btn:hover { background: rgba(255,255,255,0.15); }
-        .ctrl-btn.connected { border-color: #22c55e; }
-        #fs-toggle        { top: 16px; }
-        #help-toggle      { top: 64px; }
-        #connector-toggle { top: 112px; }
+    /* ---------- Cursor ---------- */
+    #cursor-dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #fff, var(--accent-2));
+      box-shadow: 0 0 20px rgba(255,176,0,0.4);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 8;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #cursor-dot.active { opacity: 1; }
+    #cursor-dot.clicking { animation: click-pop 0.2s ease; }
+    @keyframes click-pop {
+      0%   { transform: translate(-50%,-50%) scale(1); }
+      50%  { transform: translate(-50%,-50%) scale(1.6); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(1); }
+    }
 
-        /* ============ CURSOR ============ */
-        #cursor-dot {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 40% 35%, #fff, #00aaff);
-            box-shadow: 0 0 20px rgba(0,170,255,0.5);
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 8;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        #cursor-dot.active { opacity: 1; }
-        #cursor-dot.clicking { animation: click-pop 0.2s ease; }
-        @keyframes click-pop {
-            0%   { transform: translate(-50%,-50%) scale(1); }
-            50%  { transform: translate(-50%,-50%) scale(1.6); opacity: 0.8; }
-            100% { transform: translate(-50%,-50%) scale(1); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .preview-wrap, #landing { transition: none !important; }
-        }
-        @media (max-width: 600px) {
-            .landing-icon { font-size: 48px; }
-            .landing-title { font-size: 26px; }
-            .gesture-preview .card { min-width: 70px; padding: 10px 12px; }
-            .gesture-preview .card .icon { font-size: 22px; }
-            .btn-start { padding: 12px 28px; font-size: 16px; }
-            .preview-wrap { width: 100%; border-radius: 14px; }
-            #onboarding .grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    @media (prefers-reduced-motion: reduce) {
+      .preview-wrap, #landing, .btn, .ctrl-btn, #hud-status, #hud-right { transition: none !important; }
+    }
+    @media (max-width: 700px) {
+      h1 { font-size: 34px; letter-spacing: -0.5px; }
+      .lede { font-size: 15px; }
+      .preview-wrap { width: 100%; }
+      .brand-bar { padding: 12px 16px; font-size: 13px; }
+      #onboarding .grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
+<!-- ============ LANDING ============ -->
+<div id="landing">
+  <div class="brand-bar">
+    <span class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#ff5a1f" stroke-width="2"/>
+        <path d="M14 10 L14 22 M10 14 L18 14" stroke="#ff5a1f" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Tony Stark Hand Control
+    </span>
+  </div>
+
+  <div class="landing-inner">
+    <span class="eyebrow">Browser-based · Local only · Open source</span>
+
+    <h1>Control your PC with<br><span class="glow">hand gestures</span></h1>
+    <p class="lede">Show your palm, pinch to click, swipe to navigate — all in your browser, nothing leaves your machine.</p>
+
+    <!-- Live preview -->
+    <div class="preview-wrap" id="preview-wrap">
+      <video id="webcam" class="preview-video" autoplay playsinline muted></video>
+      <div class="preview-dot" id="preview-dot">
+        <span class="pulse-dot"></span>
+        <span id="preview-label">Loading camera…</span>
+      </div>
+    </div>
+
+    <div class="cta-row" id="cta-row">
+      <button class="btn btn-primary" id="btn-start">Start Hands-Free  →</button>
+      <button class="btn btn-ghost" id="btn-demo" onclick="showOnboarding();">How it works</button>
+    </div>
+
+    <div class="features-row" id="features-row">
+      <span class="feature-badge">👆 Move</span>
+      <span class="feature-badge">🤏 Click</span>
+      <span class="feature-badge">🖐️ Engage</span>
+      <span class="feature-badge">✊ Pause</span>
+      <span class="feature-badge">👈👉 Navigate</span>
+    </div>
+  </div>
+
+  <span class="footer-note" id="footer-note">Camera feed stays local — nothing leaves your device</span>
+</div>
+
+<!-- ============ FULLSCREEN APP ============ -->
 <div id="app">
+  <div class="video-layer" id="video-layer"></div>
+  <canvas id="overlay"></canvas>
 
-    <!-- ====== LANDING ====== -->
-    <div id="landing">
-        <div class="landing-content" id="landing-content">
-            <span class="landing-icon">✋</span>
-            <h1 class="landing-title">Hand Control</h1>
-            <p class="landing-sub">Control your PC with gestures — no install, no hardware</p>
-
-            <!-- Live preview window -->
-            <div class="preview-wrap" id="preview-wrap">
-                <video id="webcam" class="preview-video" autoplay playsinline muted></video>
-                <div class="preview-pulse" id="preview-pulse"></div>
-                <div class="preview-label" id="preview-label">📷 Live Preview</div>
-            </div>
-
-            <div class="gesture-preview" id="gesture-cards">
-                <div class="card">
-                    <span class="icon">👆</span>
-                    <span class="label">Move Cursor</span>
-                </div>
-                <div class="card">
-                    <span class="icon">🤏</span>
-                    <span class="label">Pinch = Click</span>
-                </div>
-                <div class="card">
-                    <span class="icon">🖐️</span>
-                    <span class="label">Open Palm = Engage</span>
-                </div>
-                <div class="card">
-                    <span class="icon">✊</span>
-                    <span class="label">Fist = Disengage</span>
-                </div>
-                <div class="card">
-                    <span class="icon">👈👉</span>
-                    <span class="label">Swipe = Navigate</span>
-                </div>
-            </div>
-
-            <button class="btn-start" id="btn-start">
-                Start Hands-Free
-                <span style="font-size:20px;">→</span>
-            </button>
-
-            <p class="landing-footer" id="landing-footer">Camera feed stays local — nothing leaves your device</p>
-        </div>
+  <div class="hud-elements">
+    <div id="hud-status">Initializing…</div>
+    <div id="hud-right">
+      <div class="hud-badge"><span class="label">FPS</span> <span class="value" id="fps-val">0</span></div>
+      <div class="hud-badge"><span class="label">GESTURE</span> <span class="value" id="gesture-val">—</span></div>
+      <div class="hud-badge"><span class="label">BRIDGE</span> <span id="bridge-val" class="value">Disconnected</span></div>
+      <div class="hud-badge"><span class="label">TRACKING</span> <span id="tracking-val" class="value">Ready</span></div>
     </div>
+  </div>
 
-    <!-- ====== VIDEO LAYER (video moves here after zoom) ====== -->
-    <div class="video-layer" id="video-layer"></div>
-    <canvas id="overlay"></canvas>
+  <div id="gesture-toast"></div>
 
-    <!-- ====== HUD ====== -->
-    <div class="hud-elements">
-        <div id="hud-status">Initializing…</div>
-        <div id="hud-right">
-            <div class="hud-badge"><span class="label">FPS</span> <span class="value" id="fps-val">0</span></div>
-            <div class="hud-badge"><span class="label">GESTURE</span> <span class="value" id="gesture-val">—</span></div>
-            <div class="hud-badge">
-                <span class="dot" id="bridge-dot"></span>
-                <span class="label">BRIDGE</span>
-                <span class="value" id="bridge-val">Disconnected</span>
-            </div>
-            <div class="hud-badge">
-                <span class="dot green" id="tracking-dot"></span>
-                <span class="label">TRACKING</span>
-                <span class="value" id="tracking-val">Ready</span>
-            </div>
-        </div>
+  <!-- Onboarding -->
+  <div id="onboarding">
+    <h2>✋ You're in control</h2>
+    <p>Show your open palm to engage, then move your index finger to control the cursor.</p>
+    <div class="grid">
+      <div class="cell"><span class="g">🤏</span> Pinch = Left click</div>
+      <div class="cell"><span class="g">🤌</span> Thumb+Middle = Right click</div>
+      <div class="cell"><span class="g">🖐️</span> Open palm = Toggle control</div>
+      <div class="cell"><span class="g">✊</span> Fist = Disengage</div>
+      <div class="cell"><span class="g">👈👉</span> Swipe = Back / Forward</div>
+      <div class="cell"><span class="g">F</span> Fullscreen toggle</div>
     </div>
+    <p class="close-hint">Auto-closes in 6s — tap anywhere to dismiss</p>
+  </div>
 
-    <div id="gesture-toast"></div>
+  <button class="ctrl-btn" id="fs-toggle" title="Toggle Fullscreen (F)">⛶</button>
+  <button class="ctrl-btn" id="help-toggle" title="Show Help">?</button>
+  <button class="ctrl-btn" id="connector-toggle" title="Reconnect Bridge">⟳</button>
 
-    <!-- Onboarding -->
-    <div id="onboarding">
-        <h2>✋ You're in control</h2>
-        <p>Show your open palm to engage, then move your index finger to control the cursor.</p>
-        <div class="grid">
-            <div class="cell"><span class="g">🤏</span> Pinch = Left click</div>
-            <div class="cell"><span class="g">🤌</span> Thumb+Middle = Right click</div>
-            <div class="cell"><span class="g">🖐️</span> Open palm = Toggle control</div>
-            <div class="cell"><span class="g">✊</span> Fist = Disengage</div>
-            <div class="cell"><span class="g">👈👉</span> Swipe = Back / Forward</div>
-            <div class="cell"><span class="g">F</span> Fullscreen toggle</div>
-        </div>
-        <p class="close-hint">Auto-closes in 6s — tap anywhere to dismiss</p>
-    </div>
-
-    <!-- Controls -->
-    <button class="ctrl-btn" id="fs-toggle" title="Toggle Fullscreen (F)">⛶</button>
-    <button class="ctrl-btn" id="help-toggle" title="Show Help">?</button>
-    <button class="ctrl-btn" id="connector-toggle" title="Reconnect Bridge">⟳</button>
-
-    <div id="cursor-dot"></div>
+  <div id="cursor-dot"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -540,309 +562,298 @@
 
 <script>
 (function () {
-    'use strict';
+  'use strict';
 
-    // ---------- DOM ----------
-    const landing       = document.getElementById('landing');
-    const landContent   = document.getElementById('landing-content');
-    const gestureCards  = document.getElementById('gesture-cards');
-    const footerEl      = document.getElementById('landing-footer');
-    const previewWrap   = document.getElementById('preview-wrap');
-    const previewPulse  = document.getElementById('preview-pulse');
-    const previewLabel  = document.getElementById('preview-label');
-    const video         = document.getElementById('webcam');
-    const videoLayer    = document.getElementById('video-layer');
-    const overlay       = document.getElementById('overlay');
-    const ctx           = overlay.getContext('2d');
-    const startBtn      = document.getElementById('btn-start');
-    const statusBar     = document.getElementById('hud-status');
-    const fpsVal        = document.getElementById('fps-val');
-    const gestureVal    = document.getElementById('gesture-val');
-    const bridgeDot     = document.getElementById('bridge-dot');
-    const bridgeVal     = document.getElementById('bridge-val');
-    const trackDot      = document.getElementById('tracking-dot');
-    const trackVal      = document.getElementById('tracking-val');
-    const toast         = document.getElementById('gesture-toast');
-    const cursorDot     = document.getElementById('cursor-dot');
-    const fsBtn         = document.getElementById('fs-toggle');
-    const helpBtn       = document.getElementById('help-toggle');
-    const connBtn       = document.getElementById('connector-toggle');
-    const onboarding    = document.getElementById('onboarding');
-    const hudRight      = document.getElementById('hud-right');
+  // ---- DOM ----
+  const landing      = document.getElementById('landing');
+  const previewWrap  = document.getElementById('preview-wrap');
+  const previewDot   = document.getElementById('preview-dot');
+  const previewLabel = document.getElementById('preview-label');
+  const video        = document.getElementById('webcam');
+  const videoLayer   = document.getElementById('video-layer');
+  const overlay      = document.getElementById('overlay');
+  const ctx          = overlay.getContext('2d');
+  const startBtn     = document.getElementById('btn-start');
+  const ctaRow       = document.getElementById('cta-row');
+  const featuresRow  = document.getElementById('features-row');
+  const footerNote   = document.getElementById('footer-note');
+  const statusBar    = document.getElementById('hud-status');
+  const fpsVal       = document.getElementById('fps-val');
+  const gestureVal   = document.getElementById('gesture-val');
+  const bridgeVal    = document.getElementById('bridge-val');
+  const trackVal     = document.getElementById('tracking-val');
+  const toast        = document.getElementById('gesture-toast');
+  const cursorDot    = document.getElementById('cursor-dot');
+  const fsBtn        = document.getElementById('fs-toggle');
+  const helpBtn      = document.getElementById('help-toggle');
+  const connBtn      = document.getElementById('connector-toggle');
+  const onboarding   = document.getElementById('onboarding');
+  const app          = document.getElementById('app');
+  const hudRight     = document.getElementById('hud-right');
 
-    // ---------- State ----------
-    let ws, wsReconnectTimer, lastSend = 0;
-    const SEND_INTERVAL = 30, WS_PORT = 8124;
-    let smoothX = 0.5, smoothY = 0.5;
-    let currentGesture = '—';
-    let gestureToastTimer, frameCount = 0, fpsTime = performance.now(), fps = 0;
-    let hands, camera, stream, mediapipeReady = false, appStarted = false;
-    let prevCx = null, swipeCd = 0, lastClick = 0;
-    const CLICK_CD = 400;
+  // ---- State ----
+  let ws, wsReconnectTimer, lastSend = 0;
+  const SEND_INT = 30, WS_PORT = 8124;
+  let sx = 0.5, sy = 0.5, curGesture = '—';
+  let toastTimer, frameCount = 0, fpsTime = performance.now(), fps = 0;
+  let hands, camera, stream, mpReady = false, started = false;
+  let prevCx = null, swipeCd = 0, lastClick = 0;
+  const CLICK_CD = 400;
 
-    // ---------- Helpers ----------
-    function showToast(text, sub) {
-        toast.innerHTML = text + (sub ? `<div class="sub">${sub}</div>` : '');
-        toast.classList.add('show');
-        clearTimeout(gestureToastTimer);
-        gestureToastTimer = setTimeout(() => toast.classList.remove('show'), 800);
-    }
-    function setBridgeStatus(c) {
-        bridgeDot.className = `dot ${c ? 'green' : 'red'}`;
-        bridgeVal.textContent = c ? 'Connected' : 'Disconnected';
-        connBtn.classList.toggle('connected', c);
-    }
-    function setTrackingStatus(a) {
-        trackDot.className = `dot ${a ? 'green' : 'yellow'}`;
-        trackVal.textContent = a ? 'Active' : 'Waiting…';
-    }
-    function smoothCursor(tx, ty) {
-        smoothX += (tx - smoothX) * 0.35;
-        smoothY += (ty - smoothY) * 0.35;
-        cursorDot.style.left = (smoothX * window.innerWidth) + 'px';
-        cursorDot.style.top  = (smoothY * window.innerHeight) + 'px';
-    }
+  // ---- Helpers ----
+  function showToast(t, sub) {
+    toast.innerHTML = t + (sub ? `<div class="sub">${sub}</div>` : '');
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 800);
+  }
+  function setBridge(c) {
+    bridgeVal.textContent = c ? 'Connected' : 'Disconnected';
+    connBtn.classList.toggle('connected', c);
+  }
+  function setTrack(a) {
+    trackVal.textContent = a ? 'Active' : 'Waiting…';
+  }
+  function smoothCursor(tx, ty) {
+    sx += (tx - sx) * 0.35;
+    sy += (ty - sy) * 0.35;
+    cursorDot.style.left = (sx * window.innerWidth) + 'px';
+    cursorDot.style.top  = (sy * window.innerHeight) + 'px';
+  }
 
-    // ---------- Fullscreen ----------
-    function toggleFS() {
-        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-        else document.exitFullscreen().catch(() => {});
-    }
-    fsBtn.addEventListener('click', toggleFS);
-    document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') toggleFS(); });
+  function toggleFS() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
+  }
+  fsBtn.addEventListener('click', toggleFS);
+  document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') toggleFS(); });
 
-    // ---------- Onboarding ----------
-    function showOnboarding() {
-        onboarding.classList.add('show');
-        setTimeout(() => onboarding.classList.remove('show'), 6000);
-    }
-    onboarding.addEventListener('click', () => onboarding.classList.remove('show'));
-    helpBtn.addEventListener('click', showOnboarding);
+  // ---- Onboarding ----
+  window.showOnboarding = function() {
+    onboarding.classList.add('show');
+    setTimeout(() => onboarding.classList.remove('show'), 6000);
+  };
+  onboarding.addEventListener('click', () => onboarding.classList.remove('show'));
+  helpBtn.addEventListener('click', window.showOnboarding);
 
-    // ---------- WebSocket ----------
-    function connectWS() {
-        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
-        try { ws = new WebSocket(`ws://127.0.0.1:${WS_PORT}`); }
-        catch (_) { setBridgeStatus(false); scheduleReconnect(); return; }
-        ws.onopen = () => { setBridgeStatus(true); clearTimeout(wsReconnectTimer); };
-        ws.onclose = () => { setBridgeStatus(false); scheduleReconnect(); };
-        ws.onerror = () => { ws.close(); };
-    }
-    function scheduleReconnect() {
-        clearTimeout(wsReconnectTimer);
-        wsReconnectTimer = setTimeout(connectWS, 3000);
-    }
-    function sendToBridge(type, data) {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const now = performance.now();
-        if (now - lastSend < SEND_INTERVAL) return;
-        lastSend = now;
-        try { ws.send(JSON.stringify({ type, ...data })); } catch (_) {}
-    }
-    connBtn.addEventListener('click', () => { if (ws) try { ws.close(); } catch(_) {} connectWS(); });
+  // ---- WS ----
+  function connectWS() {
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+    try { ws = new WebSocket(`ws://127.0.0.1:${WS_PORT}`); }
+    catch (_) { setBridge(false); scheduleReconnect(); return; }
+    ws.onopen = () => { setBridge(true); clearTimeout(wsReconnectTimer); };
+    ws.onclose = () => { setBridge(false); scheduleReconnect(); };
+    ws.onerror = () => { ws.close(); };
+  }
+  function scheduleReconnect() {
+    clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = setTimeout(connectWS, 3000);
+  }
+  function sendBridge(type, data) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    const now = performance.now();
+    if (now - lastSend < SEND_INT) return;
+    lastSend = now;
+    try { ws.send(JSON.stringify({ type, ...data })); } catch (_) {}
+  }
+  connBtn.addEventListener('click', () => { if (ws) try { ws.close(); } catch(_) {} connectWS(); });
 
-    // ---------- Gesture ----------
-    function dist(a, b) { return Math.hypot(a.x-b.x, a.y-b.y, (a.z||0)-(b.z||0)); }
-    function isOpenPalm(lm) { return [4,8,12,16,20].filter(i => dist(lm[0], lm[i]) > 0.12).length >= 4; }
-    function isPinch(t, i) { return dist(t, i) < 0.06; }
-    function isFist(lm) {
-        return [8,12,16,20].every(i => dist(lm[9], lm[i]) < 0.12) && dist(lm[9], lm[4]) < 0.12;
-    }
-    function detectSwipe(lm) {
-        const cx = lm[0].x;
-        if (prevCx === null) { prevCx = cx; return null; }
-        const dx = cx - prevCx; prevCx = cx;
-        const now = performance.now();
-        if (now < swipeCd) return null;
-        if (Math.abs(dx) > 0.015) { swipeCd = now + 400; return dx > 0 ? 'swipe_right' : 'swipe_left'; }
-        return null;
-    }
-    function detectClick(lm) {
-        const t = lm[4], i = lm[8], m = lm[12], now = performance.now();
-        if (dist(t, m) < 0.05 && now - lastClick > CLICK_CD*2) { lastClick = now; return 'right'; }
-        if (isPinch(t, i) && now - lastClick > CLICK_CD) { lastClick = now; return 'left'; }
-        return null;
-    }
+  // ---- Gesture ----
+  function dist(a, b) { return Math.hypot(a.x-b.x, a.y-b.y, (a.z||0)-(b.z||0)); }
+  function isOpenPalm(lm) { return [4,8,12,16,20].filter(i => dist(lm[0], lm[i]) > 0.12).length >= 4; }
+  function isPinch(t, i) { return dist(t, i) < 0.06; }
+  function isFist(lm) { return [8,12,16,20].every(i => dist(lm[9], lm[i]) < 0.12) && dist(lm[9], lm[4]) < 0.12; }
+  function detectSwipe(lm) {
+    const cx = lm[0].x;
+    if (prevCx === null) { prevCx = cx; return null; }
+    const dx = cx - prevCx; prevCx = cx;
+    const now = performance.now();
+    if (now < swipeCd) return null;
+    if (Math.abs(dx) > 0.015) { swipeCd = now + 400; return dx > 0 ? 'swipe_right' : 'swipe_left'; }
+    return null;
+  }
+  function detectClick(lm) {
+    const t = lm[4], i = lm[8], m = lm[12], now = performance.now();
+    if (dist(t, m) < 0.05 && now - lastClick > CLICK_CD*2) { lastClick = now; return 'right'; }
+    if (isPinch(t, i) && now - lastClick > CLICK_CD) { lastClick = now; return 'left'; }
+    return null;
+  }
 
-    // ---------- Drawing ----------
-    function drawHand(lm, isLeft) {
-        const w = overlay.width, h = overlay.height;
-        const color = isLeft ? '#22c55e' : '#00ccff';
-        ctx.strokeStyle = color;
-        ctx.lineWidth = Math.max(2, Math.min(4, Math.min(w,h)/300));
-        const conn = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
-                      [0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],
-                      [0,17],[17,18],[18,19],[19,20],[0,5],[5,9],[9,13],[13,17]];
-        conn.forEach(([i,j]) => {
-            ctx.beginPath(); ctx.moveTo(lm[i].x*w, lm[i].y*h);
-            ctx.lineTo(lm[j].x*w, lm[j].y*h); ctx.stroke();
-        });
-        const r = Math.max(3, Math.min(7, Math.min(w,h)/250));
-        lm.forEach((p, idx) => {
-            ctx.fillStyle = (idx===4||idx===8) ? '#ff4444' : color;
-            ctx.beginPath(); ctx.arc(p.x*w, p.y*h, r, 0, Math.PI*2); ctx.fill();
-        });
-    }
-
-    // ---------- Processing ----------
-    function onResults(results) {
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-        if (overlay.width !== window.innerWidth || overlay.height !== window.innerHeight) {
-            overlay.width = window.innerWidth;
-            overlay.height = window.innerHeight;
-        }
-
-        frameCount++;
-        const now = performance.now();
-        if (now - fpsTime >= 1000) { fps = frameCount; fpsVal.textContent = fps; frameCount = 0; fpsTime = now; }
-
-        if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-            statusBar.textContent = 'No hands detected';
-            setTrackingStatus(false);
-            cursorDot.classList.remove('active');
-            gestureVal.textContent = '—';
-            prevCx = null;
-            return;
-        }
-
-        setTrackingStatus(true);
-        const n = results.multiHandLandmarks.length;
-        statusBar.textContent = n === 1 ? '1 hand' : `${n} hands`;
-
-        let rightLM = null, leftLM = null;
-        for (let i = 0; i < n; i++) {
-            const lm = results.multiHandLandmarks[i];
-            const isL = results.multiHandedness[i].label === 'Left';
-            drawHand(lm, isL);
-            if (!isL) rightLM = lm; else leftLM = lm;
-        }
-
-        const hand = rightLM || leftLM;
-        if (hand) {
-            smoothCursor(hand[8].x, hand[8].y);
-            cursorDot.classList.add('active');
-            sendToBridge('cursor', { x: smoothX, y: smoothY });
-
-            const click = detectClick(hand);
-            if (click === 'left') {
-                showToast('🖱️ Click'); sendToBridge('click', {button:'left'});
-                cursorDot.classList.add('clicking');
-                setTimeout(() => cursorDot.classList.remove('clicking'), 200);
-                currentGesture = 'Click';
-            } else if (click === 'right') {
-                showToast('🖱️ Right Click'); sendToBridge('click', {button:'right'});
-                currentGesture = 'Right Click';
-            } else if (isOpenPalm(hand)) {
-                currentGesture = 'Open Palm ⚡'; sendToBridge('open_palm', {});
-            } else if (isFist(hand)) {
-                currentGesture = 'Fist ✊'; sendToBridge('fist', {});
-            } else {
-                const sw = detectSwipe(hand);
-                if (sw) {
-                    const dir = sw === 'swipe_left' ? 'left' : 'right';
-                    currentGesture = sw === 'swipe_left' ? 'Swipe ←' : 'Swipe →';
-                    showToast(currentGesture); sendToBridge('swipe', {direction: dir});
-                } else { currentGesture = 'Tracking'; }
-            }
-        }
-        gestureVal.textContent = currentGesture;
-    }
-
-    // ---------- MediaPipe ----------
-    async function initMediaPipe() {
-        statusBar.textContent = 'Initializing MediaPipe…';
-        hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}` });
-        hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
-        hands.onResults(onResults);
-        await hands.initialize();
-        mediapipeReady = true;
-        statusBar.textContent = 'Ready — show your hand';
-        camera = new Camera(video, {
-            onFrame: async () => { if (mediapipeReady) await hands.send({ image: video }); },
-            width: 1920, height: 1080
-        });
-        camera.start();
-    }
-
-    // ---------- Camera ----------
-    async function initCamera() {
-        startBtn.disabled = true;
-        startBtn.textContent = 'Starting camera…';
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }
-            });
-        } catch (e) {
-            startBtn.textContent = 'Camera Access Needed';
-            startBtn.disabled = false;
-            previewLabel.textContent = '🔒 Camera required';
-            return;
-        }
-        video.srcObject = stream;
-        await new Promise(r => { video.onloadedmetadata = r; });
-        startBtn.disabled = false;
-        startBtn.textContent = 'Start Hands-Free  →';
-        previewLabel.textContent = '📷 Live — ready';
-    }
-
-    // ---------- ZOOM TRANSITION ----------
-    function startApp() {
-        if (appStarted) return;
-        appStarted = true;
-
-        // Fade everything except the preview
-        gestureCards.classList.add('fade');
-        startBtn.classList.add('fade');
-        footerEl.classList.add('fade');
-        previewPulse.classList.add('fade');
-        previewLabel.classList.add('hidden');
-
-        // Zoom preview to full viewport
-        previewWrap.classList.add('zoomed');
-
-        // After zoom animation
-        setTimeout(() => {
-            // Move video element out of preview-wrap into video-layer
-            videoLayer.appendChild(video);
-            video.style.width = '100%';
-            video.style.height = '100%';
-            video.style.objectFit = 'cover';
-            video.style.transform = 'scaleX(-1)';
-            video.style.display = 'block';
-
-            // Hide the landing background gradient, show HUD
-            landing.classList.add('hidden');
-
-            // Show HUD
-            statusBar.classList.add('show');
-            hudRight.classList.add('show');
-            fsBtn.classList.add('show');
-            helpBtn.classList.add('show');
-            connBtn.classList.add('show');
-
-            overlay.width = window.innerWidth;
-            overlay.height = window.innerHeight;
-
-            connectWS();
-            initMediaPipe();
-            setTimeout(showOnboarding, 700);
-
-        }, 950);
-    }
-
-    // ---------- Boot ----------
-    initCamera();
-    connectWS();
-    startBtn.addEventListener('click', startApp);
-
-    window.addEventListener('resize', () => {
-        overlay.width = window.innerWidth;
-        overlay.height = window.innerHeight;
+  // ---- Drawing ----
+  function drawHand(lm, isLeft) {
+    const w = overlay.width, h = overlay.height;
+    const color = isLeft ? '#2ecc71' : '#ff5a1f';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(2, Math.min(4, Math.min(w,h)/300));
+    const conn = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+                  [0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],
+                  [0,17],[17,18],[18,19],[19,20],[0,5],[5,9],[9,13],[13,17]];
+    conn.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(lm[i].x*w, lm[i].y*h);
+      ctx.lineTo(lm[j].x*w, lm[j].y*h); ctx.stroke();
     });
-
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) showToast('⛶ Exited Fullscreen', 'Press F to re-enter');
+    const r = Math.max(3, Math.min(7, Math.min(w,h)/250));
+    lm.forEach((p, idx) => {
+      ctx.fillStyle = (idx===4||idx===8) ? '#ffb000' : color;
+      ctx.beginPath(); ctx.arc(p.x*w, p.y*h, r, 0, Math.PI*2); ctx.fill();
     });
+  }
+
+  // ---- Processing ----
+  function onResults(results) {
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+    if (overlay.width !== window.innerWidth || overlay.height !== window.innerHeight) {
+      overlay.width = window.innerWidth;
+      overlay.height = window.innerHeight;
+    }
+    frameCount++;
+    const now = performance.now();
+    if (now - fpsTime >= 1000) { fps = frameCount; fpsVal.textContent = fps; frameCount = 0; fpsTime = now; }
+
+    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+      statusBar.textContent = 'No hands detected';
+      setTrack(false);
+      cursorDot.classList.remove('active');
+      gestureVal.textContent = '—';
+      prevCx = null;
+      return;
+    }
+    setTrack(true);
+    const n = results.multiHandLandmarks.length;
+    statusBar.textContent = n === 1 ? '1 hand' : `${n} hands`;
+
+    let rightLM = null;
+    for (let i = 0; i < n; i++) {
+      const lm = results.multiHandLandmarks[i];
+      const isL = results.multiHandedness[i].label === 'Left';
+      drawHand(lm, isL);
+      if (!isL) rightLM = lm;
+    }
+
+    const hand = rightLM || results.multiHandLandmarks[0];
+    if (hand) {
+      smoothCursor(hand[8].x, hand[8].y);
+      cursorDot.classList.add('active');
+      sendBridge('cursor', { x: sx, y: sy });
+
+      const click = detectClick(hand);
+      if (click === 'left') {
+        showToast('🖱️ Click'); sendBridge('click', {button:'left'});
+        cursorDot.classList.add('clicking');
+        setTimeout(() => cursorDot.classList.remove('clicking'), 200);
+        curGesture = 'Click';
+      } else if (click === 'right') {
+        showToast('🖱️ Right Click'); sendBridge('click', {button:'right'});
+        curGesture = 'Right Click';
+      } else if (isOpenPalm(hand)) {
+        curGesture = 'Open Palm ⚡'; sendBridge('open_palm', {});
+      } else if (isFist(hand)) {
+        curGesture = 'Fist ✊'; sendBridge('fist', {});
+      } else {
+        const sw = detectSwipe(hand);
+        if (sw) {
+          const dir = sw === 'swipe_left' ? 'left' : 'right';
+          curGesture = sw === 'swipe_left' ? 'Swipe ←' : 'Swipe →';
+          showToast(curGesture); sendBridge('swipe', {direction: dir});
+        } else { curGesture = 'Tracking'; }
+      }
+    }
+    gestureVal.textContent = curGesture;
+  }
+
+  // ---- MediaPipe ----
+  async function initMP() {
+    statusBar.textContent = 'Initializing MediaPipe…';
+    hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}` });
+    hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+    hands.onResults(onResults);
+    await hands.initialize();
+    mpReady = true;
+    statusBar.textContent = 'Ready — show your hand';
+    camera = new Camera(video, {
+      onFrame: async () => { if (mpReady) await hands.send({ image: video }); },
+      width: 1920, height: 1080
+    });
+    camera.start();
+  }
+
+  // ---- Camera ----
+  async function initCamera() {
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting camera…';
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }
+      });
+    } catch (e) {
+      startBtn.textContent = 'Camera Access Needed';
+      startBtn.disabled = false;
+      previewLabel.textContent = '🔒 Camera required';
+      return;
+    }
+    video.srcObject = stream;
+    await new Promise(r => { video.onloadedmetadata = r; });
+    startBtn.disabled = false;
+    startBtn.textContent = 'Start Hands-Free  →';
+    previewLabel.textContent = 'Live — ready';
+  }
+
+  // ---- ZOOM ----
+  function startApp() {
+    if (started) return;
+    started = true;
+
+    // Fade surrounding UI
+    ctaRow.classList.add('fade');
+    featuresRow.classList.add('fade');
+    footerNote.classList.add('fade');
+    previewDot.classList.add('hidden');
+
+    // Zoom
+    previewWrap.classList.add('zoomed');
+
+    setTimeout(() => {
+      // Move video to fullscreen layer
+      videoLayer.appendChild(video);
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      video.style.transform = 'scaleX(-1)';
+      video.style.display = 'block';
+
+      // Hide landing, show app
+      landing.classList.add('hidden');
+      app.classList.add('visible');
+
+      overlay.width = window.innerWidth;
+      overlay.height = window.innerHeight;
+
+      // HUD
+      statusBar.classList.add('show');
+      hudRight.classList.add('show');
+      fsBtn.classList.add('show');
+      helpBtn.classList.add('show');
+      connBtn.classList.add('show');
+
+      connectWS();
+      initMP();
+      setTimeout(window.showOnboarding, 700);
+    }, 950);
+  }
+
+  // ---- Boot ----
+  initCamera();
+  connectWS();
+  startBtn.addEventListener('click', startApp);
+
+  window.addEventListener('resize', () => {
+    overlay.width = window.innerWidth;
+    overlay.height = window.innerHeight;
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) showToast('⛶ Exited Fullscreen', 'Press F to re-enter');
+  });
 })();
 </script>
 </body>
