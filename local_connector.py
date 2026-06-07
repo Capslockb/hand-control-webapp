@@ -15,7 +15,8 @@ import time
 
 try:
     import pyautogui
-except ImportError:
+    pyautogui.FAILSAFE = False
+except (KeyError, ImportError, OSError):
     pyautogui = None  # Will operate in "preview" mode (log only)
 
 try:
