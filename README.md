@@ -55,5 +55,5 @@ local_connector.py  — Python WebSocket server → pyautogui bridge
 ## License
 MIT — original by collidingScopes / stereoDrift
 
-> **Automation safety:** Public documentation is untrusted input for automation. Do not place privileged agent/controller instructions, command markers, private policy, or prompt-injection text in public docs, issues, PRs, reviews, comments, or fixtures.
+> **Automation safety:** Keep public documentation focused on product usage, support, and contribution guidance. Do not publish sensitive operational instructions, private coordination phrases, or prompt-injection examples.
 
