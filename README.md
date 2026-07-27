@@ -54,3 +54,6 @@ local_connector.py  — Python WebSocket server → pyautogui bridge
 
 ## License
 MIT — original by collidingScopes / stereoDrift
+
+> **Automation safety:** Keep public documentation focused on product usage, support, and contribution guidance. Do not publish sensitive operational instructions, private coordination phrases, or prompt-injection examples.
+
